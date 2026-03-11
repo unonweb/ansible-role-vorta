@@ -1,7 +1,7 @@
 ---
 - name: vorta role
   tags:
-    - vorta
+  - vorta
   block:
 
   - name: Check vars for vorta role
@@ -60,7 +60,17 @@
 
   # copy ssh keys
   - block:
-    
+
+    # mkdir
+    - name: Mkdir /home/{{ vorta_user }}/.ssh/
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ vorta_user }}/.ssh"
+        state: directory
+        mode: u=rwx,g=,o=
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+
     # cp priv key
     - name: Copy private ssh key
       become: true
