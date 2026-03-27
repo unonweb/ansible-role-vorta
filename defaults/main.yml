@@ -8,3 +8,12 @@ vorta_flatpak_scope: system
 vorta_flatpak_state: present
 vorta_flatpak_override: "{{ role_path }}/files/flatpak_override"
 vorta_apt_state: absent
+vorta_autostart: true
+vorta_autostart_src: flatpak_autostart
+vorta_autostart_dst: "/home/{{ vorta_user }}/.config/autostart/vorta.desktop"
+# systemd
+vorta_systemd_copy: []
+vorta_systemd_template: []
+vorta_systemd_scope: user
+vorta_systemd_enable: []
+vorta_systemd_disable: []
