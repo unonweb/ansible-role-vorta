@@ -1,13 +1,43 @@
 ---
 vorta_user:
-vorta_config:
+# repo
+vorta_repo_host:
+vorta_repo_user:
+vorta_repo_path:
+vorta_repo_ssh_private_key_file:
+vorta_repo_pw:
+# config
+vorta_config_template: vorta.json.j2
 vorta_config_init: false
-vorta_config_borg_pw:
-vorta_nas_borg_ssh_private_key_file:
+# config options
+vorta_config_schedule_mode: interval
+vorta_config_schedule_interval_count: 3
+vorta_config_schedule_interval_unit: hours
+vorta_config_schedule_fixed_hour: 3
+vorta_config_schedule_fixed_minute: 42
+vorta_config_schedule_interval_hours: 3
+vorta_config_schedule_interval_minutes: 42
+vorta_config_schedule_make_up_missed: true
+vorta_config_validation_on: true
+vorta_config_validation_weeks: 3
+vorta_config_compaction_on: true
+vorta_config_compaction_weeks: 3
+vorta_config_prune_on: true
+vorta_config_prune_hour: 0
+vorta_config_prune_day: 7
+vorta_config_prune_week: 4
+vorta_config_prune_month: 0
+vorta_config_prune_year: 0
+vorta_config_prune_keep_within: 24H
+vorta_config_new_archive_name: "{hostname}-{now:%Y-%m-%d-%H%M%S}"
+vorta_config_prune_prefix: ""
+# flatpak
 vorta_flatpak_scope: system
 vorta_flatpak_state: present
 vorta_flatpak_override: "{{ role_path }}/files/flatpak_override"
+# apt
 vorta_apt_state: absent
+# autostart
 vorta_autostart: true
 vorta_autostart_src: flatpak_autostart
 vorta_autostart_dst: "/home/{{ vorta_user }}/.config/autostart/vorta.desktop"

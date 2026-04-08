@@ -4,11 +4,17 @@
   - vorta
   block:
 
+  # assert
   - name: Check vars for vorta role
     ansible.builtin.assert:
       that:
       - vorta_user != None
-      - vorta_config_borg_pw != None
+      - vorta_repo_pw != None
+
+  # make sure user exists
+  - name: Check if user exists {{ vorta_user }}
+    command: "getent passwd {{ vorta_user }}"
+    changed_when: false
       
   # flatpak
   - when: vorta_flatpak_state != None
@@ -50,10 +56,10 @@
       
   # template config
   - when: vorta_config_init == true
-    name: Template config {{ vorta_config }}
+    name: Template config {{ vorta_config_template }}
     become: true
     ansible.builtin.template:
-      src: "{{ vorta_config }}"
+      src: "{{ vorta_config_template }}"
       dest: "/home/{{ vorta_user }}/.vorta-init.json"
       owner: "{{ vorta_user }}"
       group: "{{ vorta_user }}"
@@ -109,8 +115,8 @@
     - name: Copy private ssh key
       become: true
       ansible.builtin.copy:
-        src: "{{ vorta_nas_borg_ssh_private_key_file }}"
-        dest: "/home/{{ vorta_user }}/.ssh/{{ vorta_nas_borg_ssh_private_key_file }}"
+        src: "{{ vorta_repo_ssh_private_key_file }}"
+        dest: "/home/{{ vorta_user }}/.ssh/{{ vorta_repo_ssh_private_key_file }}"
         owner: "{{ vorta_user }}"
         group: "{{ vorta_user }}"
         mode: u=rw,g=,o=
