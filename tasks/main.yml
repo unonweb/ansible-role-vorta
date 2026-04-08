@@ -56,10 +56,10 @@
       
   # template config
   - when: vorta_config_init == true
-    name: Template config {{ vorta_config_template }}
+    name: Template config {{ vorta_config }}
     become: true
     ansible.builtin.template:
-      src: "{{ vorta_config_template }}"
+      src: "{{ vorta_config }}"
       dest: "/home/{{ vorta_user }}/.vorta-init.json"
       owner: "{{ vorta_user }}"
       group: "{{ vorta_user }}"

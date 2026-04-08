@@ -7,7 +7,7 @@ vorta_repo_path:
 vorta_repo_ssh_private_key_file:
 vorta_repo_pw:
 # config
-vorta_config_template: vorta.json.j2
+vorta_config: vorta.json.j2
 vorta_config_init: false
 # config options
 vorta_config_schedule_mode: interval
