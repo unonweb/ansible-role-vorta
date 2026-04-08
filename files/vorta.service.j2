@@ -1,0 +1,16 @@
+[Unit]
+Description=Vorta Backup Software
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecCondition=/usr/bin/ping -c 1 -W 3 {{ vorta_repo_host }}
+ExecStart=flatpak run com.borgbase.Vorta --daemonize
+Restart=on-failure
+RestartSec=5min
+SyslogIdentifier=%n
+StandardOutput=journal
+
+[Install]
+WantedBy=graphical-session.target
