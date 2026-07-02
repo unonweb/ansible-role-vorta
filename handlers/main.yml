@@ -1,0 +1,4 @@
+---
+- name: update-desktop-database
+  become: true
+  ansible.builtin.command: update-desktop-database /usr/share/applications
