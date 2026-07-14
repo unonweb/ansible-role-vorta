@@ -1,0 +1,10 @@
+[Unit]
+Description=Run %N.service
+
+[Timer]
+OnBootSec=5min
+Persistent=true
+RandomizedDelaySec=180
+
+[Install]
+WantedBy=timers.target
