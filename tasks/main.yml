@@ -9,7 +9,15 @@
     ansible.builtin.assert:
       that:
       - vorta_user != None
-      - vorta_config_borg_pw != None
+      - vorta_repo_host != None
+      - vorta_repo_path != None
+      - vorta_repo_ssh_private_key_file != None
+      - vorta_repo_pw != None
+
+  # make sure user exists
+  - name: Check if user exists {{ vorta_user }}
+    command: "getent passwd {{ vorta_user }}"
+    changed_when: false
       
   # flatpak
   - when: vorta_flatpak_state != None
@@ -59,6 +67,40 @@
       owner: "{{ vorta_user }}"
       group: "{{ vorta_user }}"
 
+  # cp autostart desktop file
+  - when: vorta_autostart == true
+    block:
+
+    # mkdir
+    - name: Mkdir {{ vorta_autostart_dst | dirname }}
+      become: true
+      ansible.builtin.file:
+        path: "{{ vorta_autostart_dst | dirname }}"
+        state: directory
+        mode: u=rwx,g=,o=x
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+
+    - name: Copy {{ vorta_autostart_src }} to {{ vorta_autostart_dst }}
+      become: true
+      notify: update-desktop-database
+      ansible.builtin.copy:
+        src: "{{ vorta_autostart_src }}"
+        dest: "{{ vorta_autostart_dst }}"
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+        mode: u=rw,g=,o=r # world readable
+
+  # remove .autostart
+  - when: vorta_autostart == false 
+    name: Remove "{{ vorta_autostart_dst }}"
+    become: true
+    ignore_errors: true
+    failed_when: false
+    ansible.builtin.file:
+      path: "{{ vorta_autostart_dst }}"
+      state: absent
+
   # copy ssh keys
   - block:
 
@@ -76,8 +118,11 @@
     - name: Copy private ssh key
       become: true
       ansible.builtin.copy:
-        src: "{{ vorta_nas_borg_ssh_private_key_file }}"
-        dest: "/home/{{ vorta_user }}/.ssh/{{ vorta_nas_borg_ssh_private_key_file }}"
+        src: "{{ vorta_repo_ssh_private_key_file }}"
+        dest: "/home/{{ vorta_user }}/.ssh/{{ vorta_repo_ssh_private_key_file }}"
         owner: "{{ vorta_user }}"
         group: "{{ vorta_user }}"
         mode: u=rw,g=,o=
+
+  # systemd
+  - ansible.builtin.import_tasks: systemd.yml

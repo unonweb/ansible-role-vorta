@@ -1,0 +1,59 @@
+- when: vorta_systemd_scope == "user"
+  block:
+
+  # copy
+  - when: vorta_systemd_copy | length > 0
+    name: Copy systemd unit files {{ vorta_systemd_copy }}
+    become: true
+    loop: "{{ vorta_systemd_copy }}"
+    ansible.builtin.copy:
+      src: "{{ item }}"
+      dest: "/home/{{ vorta_user }}/.config/systemd/user/{{ item.split('/')[-1] }}" # systemd/un.machines.service -> un.machines.service
+      owner: "{{ vorta_user }}"
+      group: "{{ vorta_user }}"
+      mode: u=rw,g=r,o=r
+
+  # template
+  - when: vorta_systemd_template | length > 0
+    name: Template systemd unit files {{ vorta_systemd_template }}
+    become: true
+    loop: "{{ vorta_systemd_template }}"
+    ansible.builtin.template:
+      src: "{{ item }}"
+      dest: "/home/{{ vorta_user }}/.config/systemd/user/{{ item.split('/')[-1].replace('.j2', '') }}" # systemd/un.machines.service.j2 -> un.machines.service.j2 -> systemd/un.machines.service
+      owner: "{{ vorta_user }}"
+      group: "{{ vorta_user }}"
+      mode: u=rw,g=r,o=r
+
+  # enable
+  - when: vorta_systemd_enable | length > 0
+    block:
+
+    # mkdir 
+    - name: Mkdir /home/{{ vorta_user }}/.config/systemd/user/graphical-session.target.wants
+      become: true
+      ansible.builtin.file:
+        state: directory
+        path: "/home/{{ vorta_user }}/.config/systemd/user/graphical-session.target.wants/"
+        mode: u=rwx,g=,o=rx
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+
+    # symlinks
+    - name: Enable user units for graphical-session.target {{ vorta_systemd_enable }}
+      become: true
+      loop: "{{ vorta_systemd_enable }}"
+      ansible.builtin.file:
+        src: "/home/{{ vorta_user }}/.config/systemd/user/{{ item }}"
+        dest: "/home/{{ vorta_user }}/.config/systemd/user/graphical-session.target.wants/{{ item }}"
+        state: link
+        force: yes
+
+  # disable
+  - when: vorta_systemd_disable | length > 0
+    name: Disable user units {{ vorta_systemd_disable }}
+    become: true
+    loop: "{{ vorta_systemd_disable }}"
+    ansible.builtin.file:
+      state: absent
+      path: "/home/{{ vorta_user }}/.config/systemd/user/graphical-session.target.wants/{{ item }}"

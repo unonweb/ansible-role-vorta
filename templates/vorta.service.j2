@@ -1,0 +1,22 @@
+[Unit]
+Description=Vorta Backup Software
+After=network-online.target
+
+[Service]
+# As Vorta shall daemonize we need the simple type
+Type=simple
+# When started try to ping the repository host 6 times waiting 30s in between (3 minutes)
+ExecStartPre=/usr/bin/bash -c 'for i in {1..6}; do if /usr/bin/ping -c 1 -W 3 {{ vorta_repo_host }} >/dev/null 2>&1; then exit 0; fi; sleep 30; done; exit 1'
+ExecStart=flatpak run com.borgbase.Vorta --daemonize
+# Failsafe: Timout after 5min of trying to start 
+TimeoutStartSec=5min
+# Try again to start after 30min
+Restart=on-failure
+RestartSec=30min
+RestartSteps=2
+RestartMaxDelaySec=2h
+SyslogIdentifier=%n
+StandardOutput=journal
+
+[Install]
+WantedBy=graphical-session.target
