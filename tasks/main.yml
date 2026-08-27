@@ -4,6 +4,7 @@
   - vorta
   block:
 
+  # assert
   - name: Check vars for vorta role
     ansible.builtin.assert:
       that:
