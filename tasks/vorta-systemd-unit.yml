@@ -17,6 +17,17 @@
   - when: (item.config is defined) or (item.template is defined)
     block:
 
+    # mkdir user units
+    - name: Mkdir {{ __vorta_systemd_unit_dir }}
+      when: (item.scope is defined) and (item.scope == 'user')
+      become: true
+      ansible.builtin.file:
+        state: directory
+        mode: u=rwx,g=,o=rx
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+        path: "{{ __vorta_systemd_unit_dir }}"
+
     # template from vars
     - name: Template unit file {{ __vorta_systemd_unit_path }}
       when: (item.config is defined) and (item.template is not defined)
