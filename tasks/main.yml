@@ -125,4 +125,12 @@
         mode: u=rw,g=,o=
 
   # systemd
-  - ansible.builtin.import_tasks: systemd.yml
+  # - ansible.builtin.import_tasks: systemd.yml
+
+  # systemd_unit
+  - name: Configure systemd units
+    ansible.builtin.include_tasks: systemd_unit.yml
+    loop: "{{ vorta_systemd_units }}"
+    loop_control:
+      loop_var: item
+      label: "{{ item.name }}"

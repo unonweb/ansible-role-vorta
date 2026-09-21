@@ -1,0 +1,88 @@
+---
+- vars:
+    __vorta_systemd_unit_name: "{{ item.name | splitext | first }}"
+    __vorta_systemd_unit_name_with_ext: "{{ __vorta_systemd_unit_name }}.{{ item.type | default('service') }}"
+    __vorta_systemd_unit_dir: "{{ '/home/' + vorta_user + '/.config/systemd/user' if item.scope is defined and item.scope == 'user' else '/etc/systemd/system' }}"
+    __vorta_systemd_unit_path: "{{ __vorta_systemd_unit_dir }}/{{ __vorta_systemd_unit_name }}.{{ item.type | default('service') }}"
+  block:
+
+  # assert
+  - name: Assertions for un-install-systemd-unit
+    ansible.builtin.assert:
+      that:
+      - __vorta_systemd_unit_name != None
+      - __vorta_systemd_unit_path != None
+
+  # template unit
+  - when: (item.config is defined) or (item.template is defined)
+    block:
+
+    # template from vars
+    - name: Template unit file {{ __vorta_systemd_unit_path }}
+      when: (item.config is defined) and (item.template is not defined)
+      become: true
+      ansible.builtin.template:
+        src: systemd/systemd-unit.j2
+        dest: "{{ __vorta_systemd_unit_path }}"
+        owner: "{{ vorta_user if item.scope is defined and item.scope == 'user' else 'root' }}"
+        group: "{{ vorta_user if item.scope is defined and item.scope == 'user' else 'root' }}"
+        mode: '0644'
+      register: __vorta_systemd_unit_file
+
+    # template from file
+    - name: Template unit file {{ __vorta_systemd_unit_path }}
+      when: (item.template is defined) and (item.config is not defined)
+      become: true
+      ansible.builtin.template:
+        src: "{{ item.template }}"
+        dest: "{{ __vorta_systemd_unit_path }}"
+        owner: "{{ vorta_user if item.scope is defined and item.scope == 'user' else 'root' }}"
+        group: "{{ vorta_user if item.scope is defined and item.scope == 'user' else 'root' }}"
+        mode: '0644'
+      register: __vorta_systemd_unit_file
+
+  # systemctl daemon-reload
+  - when:
+    - __vorta_systemd_unit_file is defined
+    - __vorta_systemd_unit_file is changed
+    block:
+
+    # --user
+    - name: Reload systemd user daemon if unit has changed
+      when: (item.scope is defined) and (item.scope == 'user')
+      become: true
+      ansible.builtin.systemd_service:
+        scope: user
+        daemon_reload: true
+
+    # --system
+    - name: Reload systemd system daemon if unit has changed
+      when: (item.scope is not defined) or (item.scope == 'system')
+      become: true
+      ansible.builtin.systemd_service:
+        scope: system
+        daemon_reload: true
+
+  # unit state
+  - when: (item.state is defined) or (item.enabled is defined)
+    block:
+
+    # --user
+    - name: Manage state of {{ __vorta_systemd_unit_name }}
+      when: (item.scope is defined) and (item.scope == 'user')
+      become: true
+      ansible.builtin.systemd_service:
+        scope: user
+        name: "{{ __vorta_systemd_unit_name_with_ext }}"
+        state: "{{ item.state | default('started') }}"
+        enabled: "{{ item.enabled | default(true) }}"
+
+    # --system
+    - name: Manage state of {{ __vorta_systemd_unit_name }}
+      when: (item.scope is not defined) or (item.scope == 'system')
+      become: true
+      ansible.builtin.systemd_service:
+        scope: system
+        name: "{{ __vorta_systemd_unit_name_with_ext }}"
+        state: "{{ item.state | default('started') }}"
+        enabled: "{{ item.enabled | default(true) }}"

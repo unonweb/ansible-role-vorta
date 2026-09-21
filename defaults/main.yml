@@ -56,8 +56,10 @@ vorta_autostart_dst: "/home/{{ vorta_user }}/.config/autostart/vorta.desktop"
 
 # SYSTEMD
 # -------
-vorta_systemd_copy: []
-vorta_systemd_template: []
-vorta_systemd_scope: user
-vorta_systemd_enable: []
-vorta_systemd_disable: []
+vorta_systemd_units: []
+# - name: 
+#   type:
+#   state:
+#   enabled:
+#   config:
+#   template:
