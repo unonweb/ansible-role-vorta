@@ -62,6 +62,8 @@
     - name: Reload systemd user daemon if unit has changed
       when: (item.scope is defined) and (item.scope == 'user')
       become: true
+      become_user: "{{ vorta_user }}"
+      failed_when: false
       ansible.builtin.systemd_service:
         scope: user
         daemon_reload: true
@@ -82,6 +84,8 @@
     - name: Manage state of {{ __vorta_systemd_unit_name }}
       when: (item.scope is defined) and (item.scope == 'user')
       become: true
+      become_user: "{{ vorta_user }}"
+      failed_when: false
       ansible.builtin.systemd_service:
         scope: user
         name: "{{ __vorta_systemd_unit_name_with_ext }}"
