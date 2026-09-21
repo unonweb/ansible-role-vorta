@@ -1,0 +1,10 @@
+---
+- tags: [vorta-apt]
+  block:
+  
+  - when: vorta_apt_state != None
+    name: Apt state {{ vorta_apt_state }}
+    become: true
+    ansible.builtin.apt:
+      name: vorta
+      state: "{{ vorta_apt_state }}"

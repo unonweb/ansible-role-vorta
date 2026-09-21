@@ -1,0 +1,13 @@
+---
+- tags: [vorta-config]
+  block:
+
+  # template config
+  - when: (vorta_config_init == true) and (vorta_config != None)
+    name: Template config {{ vorta_config }}
+    become: true
+    ansible.builtin.template:
+      src: "{{ vorta_config }}"
+      dest: "/home/{{ vorta_user }}/.vorta-init.json"
+      owner: "{{ vorta_user }}"
+      group: "{{ vorta_user }}"

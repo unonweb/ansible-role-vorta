@@ -19,117 +19,15 @@
     command: "getent passwd {{ vorta_user }}"
     changed_when: false
       
-  # flatpak
-  - when: vorta_flatpak_state != None
-    name: Flatpak state {{ vorta_flatpak_state }}
-    become: true
-    community.general.flatpak:
-      name: com.borgbase.Vorta
-      method: "{{ vorta_flatpak_scope }}" 
-      state: "{{ vorta_flatpak_state }}"
-
-  # mkdir overrides
-  - name: Mkdir /home/{{ vorta_user }}/.local/share/flatpak/overrides
-    become: true
-    ansible.builtin.file:
-      state: directory
-      mode: u=rwx,g=,o=rx
-      owner: "{{ vorta_user }}"
-      group: "{{ vorta_user }}"
-      path: "/home/{{ vorta_user }}/.local/share/flatpak/overrides"
-
-  # copy flatpak override
-  - when: vorta_flatpak_override != None
-    name: Copy {{ vorta_flatpak_override }} -> /home/{{ vorta_user }}/.local/share/flatpak/overrides/com.borgbase.Vorta
-    become: true
-    ansible.builtin.copy:
-      src: "{{ vorta_flatpak_override }}"
-      dest: "/home/{{ vorta_user }}/.local/share/flatpak/overrides/com.borgbase.Vorta"
-      owner: "{{ vorta_user }}"
-      group: "{{ vorta_user }}"
-      mode: u=rw,g=,o=r # world readable
-
-  # apt
-  - when: vorta_apt_state != None
-    name: Apt state {{ vorta_apt_state }}
-    become: true
-    ansible.builtin.apt:
-      name: vorta
-      state: "{{ vorta_apt_state }}"
-      
-  # template config
-  - when: vorta_config_init == true
-    name: Template config {{ vorta_config }}
-    become: true
-    ansible.builtin.template:
-      src: "{{ vorta_config }}"
-      dest: "/home/{{ vorta_user }}/.vorta-init.json"
-      owner: "{{ vorta_user }}"
-      group: "{{ vorta_user }}"
-
-  # cp autostart desktop file
-  - when: vorta_autostart == true
-    block:
-
-    # mkdir
-    - name: Mkdir {{ vorta_autostart_dst | dirname }}
-      become: true
-      ansible.builtin.file:
-        path: "{{ vorta_autostart_dst | dirname }}"
-        state: directory
-        mode: u=rwx,g=,o=x
-        owner: "{{ vorta_user }}"
-        group: "{{ vorta_user }}"
-
-    - name: Copy {{ vorta_autostart_src }} to {{ vorta_autostart_dst }}
-      become: true
-      notify: update-desktop-database
-      ansible.builtin.copy:
-        src: "{{ vorta_autostart_src }}"
-        dest: "{{ vorta_autostart_dst }}"
-        owner: "{{ vorta_user }}"
-        group: "{{ vorta_user }}"
-        mode: u=rw,g=,o=r # world readable
-
-  # remove .autostart
-  - when: vorta_autostart == false 
-    name: Remove "{{ vorta_autostart_dst }}"
-    become: true
-    ignore_errors: true
-    failed_when: false
-    ansible.builtin.file:
-      path: "{{ vorta_autostart_dst }}"
-      state: absent
-
-  # copy ssh keys
-  - block:
-
-    # mkdir
-    - name: Mkdir /home/{{ vorta_user }}/.ssh/
-      become: true
-      ansible.builtin.file:
-        path: "/home/{{ vorta_user }}/.ssh"
-        state: directory
-        mode: u=rwx,g=,o=
-        owner: "{{ vorta_user }}"
-        group: "{{ vorta_user }}"
-
-    # cp priv key
-    - name: Copy private ssh key
-      become: true
-      ansible.builtin.copy:
-        src: "{{ vorta_repo_ssh_private_key_file }}"
-        dest: "/home/{{ vorta_user }}/.ssh/{{ vorta_repo_ssh_private_key_file }}"
-        owner: "{{ vorta_user }}"
-        group: "{{ vorta_user }}"
-        mode: u=rw,g=,o=
-
-  # systemd
-  # - ansible.builtin.import_tasks: systemd.yml
+  - ansible.builtin.import_tasks: vorta-apt.yml
+  - ansible.builtin.import_tasks: vorta-flatpak.yml
+  - ansible.builtin.import_tasks: vorta-config.yml
+  - ansible.builtin.import_tasks: vorta-autostart.yml
+  - ansible.builtin.import_tasks: vorta-ssh.yml
 
   # systemd_unit
   - name: Configure systemd units
-    ansible.builtin.include_tasks: systemd_unit.yml
+    ansible.builtin.include_tasks: vorta-systemd-unit.yml
     loop: "{{ vorta_systemd_units }}"
     loop_control:
       loop_var: item

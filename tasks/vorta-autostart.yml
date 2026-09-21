@@ -1,0 +1,39 @@
+---
+- tags: [vorta-autostart]
+  block:
+
+  - when: vorta_autostart == true
+    block:
+      
+    # mkdir
+    - name: Mkdir {{ vorta_autostart_dst | dirname }}
+      become: true
+      ansible.builtin.file:
+        path: "{{ vorta_autostart_dst | dirname }}"
+        state: directory
+        mode: u=rwx,g=,o=x
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+
+    # cp
+    - name: Copy {{ vorta_autostart_src }} to {{ vorta_autostart_dst }}
+      become: true
+      notify: update-desktop-database
+      ansible.builtin.copy:
+        src: "{{ vorta_autostart_src }}"
+        dest: "{{ vorta_autostart_dst }}"
+        owner: "{{ vorta_user }}"
+        group: "{{ vorta_user }}"
+        mode: u=rw,g=,o=r # world readable
+
+  - when: vorta_autostart == false
+    block:
+
+    # remove
+    - name: Remove "{{ vorta_autostart_dst }}"
+      become: true
+      ignore_errors: true
+      failed_when: false
+      ansible.builtin.file:
+        path: "{{ vorta_autostart_dst }}"
+        state: absent
